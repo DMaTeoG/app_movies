@@ -7,7 +7,6 @@ import '../core/image_urls.dart';
 import '../models/movie_detail.dart';
 import '../models/movie_summary.dart';
 import '../widgets/cast_avatar.dart';
-import '../widgets/info_badge.dart';
 
 class MovieDetailScreen extends StatefulWidget {
   const MovieDetailScreen({super.key, required this.movie});
@@ -39,6 +38,7 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   Widget build(BuildContext context) {
     final controller = context.watch<MovieController>();
     final MovieDetail? detail = controller.selectedDetail;
+
     final posterUrl = buildPosterUrl(
       detail?.posterPath ?? widget.movie.posterPath,
     );
@@ -46,17 +46,17 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
         buildBackdropUrl(detail?.backdropPath ?? widget.movie.backdropPath) ??
         posterUrl;
 
-    final title = detail?.title ?? widget.movie.title;
-    final rating = (detail?.voteAverage ?? widget.movie.voteAverage)
-        .toStringAsFixed(1);
-    final overview = detail?.overview ?? widget.movie.overview;
-    final year =
+    final String title = detail?.title ?? widget.movie.title;
+    final double ratingValue = detail?.voteAverage ?? widget.movie.voteAverage;
+    final String ratingText = ratingValue.toStringAsFixed(1);
+    final String overview = detail?.overview ?? widget.movie.overview;
+    final String year =
         detail?.releaseYearLabel() ?? widget.movie.releaseYearLabel() ?? '--';
-    final genre = detail?.genres.isNotEmpty == true
-        ? detail!.genres.first
+    final String genre = detail != null && detail.genres.isNotEmpty
+        ? detail.genres.first
         : 'Sin genero';
-    final runtime = detail?.runtimeLabel() ?? '--';
-    final director = (detail?.director ?? '').isEmpty
+    final String runtime = detail?.runtimeLabel() ?? '--';
+    final String director = (detail?.director ?? '').isEmpty
         ? 'Sin datos'
         : detail!.director!;
 
@@ -89,224 +89,100 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: <Color>[
-                    Colors.black.withValues(alpha: 0.3),
+                    Colors.black.withValues(alpha: 0.35),
                     Theme.of(context).scaffoldBackgroundColor,
                   ],
-                  stops: const <double>[0.3, 0.8],
+                  stops: const <double>[0.0, 0.65],
                 ),
               ),
             ),
           ),
           SafeArea(
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_rounded,
+                      color: Colors.white,
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ),
             ),
           ),
           Positioned.fill(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(
-                top: 320,
-                left: 24,
-                right: 24,
-                bottom: 36,
-              ),
+              padding: const EdgeInsets.fromLTRB(24, 220, 24, 36),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: const <BoxShadow>[
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 20,
-                          offset: Offset(0, 16),
-                        ),
-                      ],
+                  _MovieSummaryCard(
+                    title: title,
+                    ratingText: ratingText,
+                    ratingValue: ratingValue,
+                    year: year,
+                    genre: genre,
+                    runtime: runtime,
+                    director: director,
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    'Plot Summary',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    overview.isNotEmpty ? overview : 'Sinopsis no disponible.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 24),
+                  if (detail != null && detail.genres.isNotEmpty) ...<Widget>[
+                    Text(
+                      'Tags',
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
-                              child: posterUrl == null
-                                  ? const SizedBox(
-                                      width: 110,
-                                      height: 160,
-                                      child: ColoredBox(
-                                        color: Color(0xFFEDE7F6),
-                                      ),
-                                    )
-                                  : CachedNetworkImage(
-                                      imageUrl: posterUrl,
-                                      width: 110,
-                                      height: 160,
-                                      fit: BoxFit.cover,
-                                    ),
-                            ),
-                            const SizedBox(width: 18),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    title,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(height: 1.2),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: <Widget>[
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: <Widget>[
-                                            const Text(
-                                              'IMDb',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              rating,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Row(
-                                        children: <Widget>[
-                                          const Icon(
-                                            Icons.star_rounded,
-                                            color: Colors.amber,
-                                            size: 22,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            rating,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium
-                                                ?.copyWith(
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 14),
-                                  Wrap(
-                                    spacing: 12,
-                                    runSpacing: 12,
-                                    children: <Widget>[
-                                      InfoBadge(label: 'Anio', value: year),
-                                      InfoBadge(label: 'Genero', value: genre),
-                                      InfoBadge(
-                                        label: 'Duracion',
-                                        value: runtime,
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: detail.genres
+                          .map(
+                            (String name) => Chip(
+                              label: Text(name),
+                              backgroundColor: const Color(0xFFFFEEF2),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(22),
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 18),
-                        Text(
-                          'Director',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          director,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 18),
-                        Text(
-                          'Sinopsis',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          overview.isNotEmpty
-                              ? overview
-                              : 'Sinopsis no disponible.',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        const SizedBox(height: 18),
-                        if (detail != null &&
-                            detail.genres.isNotEmpty) ...<Widget>[
-                          Text(
-                            'Etiquetas',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 10,
-                            children: detail.genres
-                                .map(
-                                  (String genre) => Chip(
-                                    label: Text(genre),
-                                    backgroundColor: Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withValues(alpha: 0.1),
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                          const SizedBox(height: 18),
-                        ],
-                        Text(
-                          'Reparto',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 12),
-                        if (detail?.cast.isNotEmpty == true)
-                          SizedBox(
-                            height: 150,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: detail!.cast.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(width: 16),
-                              itemBuilder: (BuildContext context, int index) {
-                                return CastAvatar(person: detail.cast[index]);
-                              },
-                            ),
                           )
-                        else
-                          const Text('Informacion de reparto no disponible.'),
-                      ],
+                          .toList(),
                     ),
-                  ),
+                    const SizedBox(height: 24),
+                  ],
+                  Text('Cast', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 12),
+                  if (detail != null && detail.cast.isNotEmpty)
+                    SizedBox(
+                      height: 150,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: detail.cast.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 16),
+                        itemBuilder: (BuildContext context, int index) {
+                          return CastAvatar(person: detail.cast[index]);
+                        },
+                      ),
+                    )
+                  else
+                    const Text('Informacion de reparto no disponible.'),
                   if (controller.isLoading) ...<Widget>[
                     const SizedBox(height: 24),
                     const Center(child: CircularProgressIndicator()),
@@ -314,6 +190,183 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MovieSummaryCard extends StatelessWidget {
+  const _MovieSummaryCard({
+    required this.title,
+    required this.ratingText,
+    required this.ratingValue,
+    required this.year,
+    required this.genre,
+    required this.runtime,
+    required this.director,
+  });
+
+  final String title;
+  final String ratingText;
+  final double ratingValue;
+  final String year;
+  final String genre;
+  final String runtime;
+  final String director;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: const <BoxShadow>[
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 26,
+            offset: Offset(0, 18),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      title,
+                      style: theme.textTheme.titleLarge?.copyWith(height: 1.1),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: <Widget>[
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: _buildStars(ratingValue),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          ratingText,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5C518),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  'IMDb',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: _MetadataItem(label: 'Year', value: year),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _MetadataItem(label: 'Type', value: genre),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: _MetadataItem(label: 'Hour', value: runtime),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _MetadataItem(label: 'Director', value: director),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildStars(double rating) {
+    final double normalized = (rating / 2).clamp(0, 5);
+    return List<Widget>.generate(5, (int index) {
+      final double value = normalized - index;
+      IconData icon;
+      if (value >= 1) {
+        icon = Icons.star_rounded;
+      } else if (value > 0) {
+        icon = Icons.star_half_rounded;
+      } else {
+        icon = Icons.star_outline_rounded;
+      }
+      return Padding(
+        padding: const EdgeInsets.only(right: 2),
+        child: Icon(icon, color: Colors.amber, size: 20),
+      );
+    });
+  }
+}
+
+class _MetadataItem extends StatelessWidget {
+  const _MetadataItem({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF6F2FF),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: Colors.black45,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
         ],
       ),
